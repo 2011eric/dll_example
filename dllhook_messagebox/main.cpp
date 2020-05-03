@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
+#include <sstream>
 
 #define _T(X) L ## X
 #define jmp 0xe9
@@ -31,9 +32,11 @@ BOOL WINAPI hookedReadFile(
 	LPDWORD lpNumberOfBytesRead,
 	LPOVERLAPPED lpOverlapped
 ) {
+
+
 	MessageBoxA(NULL, "HOOKED", "TEST", MB_OK);
 	hookOff();
-	char *line = new char(nNumberOfByteToRead);
+	char *line = new char[nNumberOfByteToRead];
 	BOOL ret = ReadFile(hFile, line, nNumberOfByteToRead, lpNumberOfBytesRead, lpOverlapped);
 	memcpy(lpBuffer, line, *lpNumberOfBytesRead);
 	MessageBoxA(NULL, line, "TEST", MB_OK);
@@ -80,12 +83,15 @@ void hookOff() {
 }
 
 void GetAdr() {
-	HMODULE hModule = LoadLibrary("user32.dll");
+	HMODULE hModule = LoadLibrary("kernel32.dll");
 	if (hModule == NULL) {
+		
 		return;
 	}
 	originReadFile = (ptrReadFile)GetProcAddress(hModule, "ReadFile");
+
 	if (originReadFile == NULL) {
+		MessageBoxA(NULL, "ERROR", "ADR", MB_OK);
 		return;
 	}
 	memcpy(oldCode, originReadFile, 5);
